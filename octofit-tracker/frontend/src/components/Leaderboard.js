@@ -144,15 +144,23 @@ function Leaderboard() {
           </thead>
           <tbody>
             {filteredLeaderboard.length > 0 ? (
-              filteredLeaderboard.map((entry, index) => (
-                <tr key={entry.id || entry._id || index}>
-                  <td>{entry.rank || index + 1}</td>
-                  <td>{entry.user_name || entry.user || 'N/A'}</td>
-                  <td>{entry.team || 'N/A'}</td>
-                  <td>{entry.total_calories || entry.total_points || 0}</td>
-                  <td>{entry.total_activities || 0}</td>
-                </tr>
-              ))
+              filteredLeaderboard.map((entry, index) => {
+                const rank = entry.rank || index + 1;
+                let rowClass = '';
+                if (rank === 1) rowClass = 'leaderboard-rank-1';
+                else if (rank === 2) rowClass = 'leaderboard-rank-2';
+                else if (rank === 3) rowClass = 'leaderboard-rank-3';
+                
+                return (
+                  <tr key={entry.id || entry._id || index} className={rowClass}>
+                    <td>{rank === 1 ? '🥇 ' : rank === 2 ? '🥈 ' : rank === 3 ? '🥉 ' : ''}{rank}</td>
+                    <td>{entry.user_name || entry.user || 'N/A'}</td>
+                    <td>{entry.team || 'N/A'}</td>
+                    <td>{entry.total_calories || entry.total_points || 0}</td>
+                    <td>{entry.total_activities || 0}</td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan="5" className="text-center">No leaderboard data found</td>
