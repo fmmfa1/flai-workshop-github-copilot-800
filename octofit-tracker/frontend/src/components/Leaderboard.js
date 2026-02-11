@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 
 function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
+  const [filteredLeaderboard, setFilteredLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'total_calories', order: 'desc' });
+  const [teamFilter, setTeamFilter] = useState('all');
+  const [availableTeams, setAvailableTeams] = useState([]);
 
   useEffect(() => {
     const apiUrl = `https://${process.env.REACT_APP_CODESPACE_NAME}-8000.app.github.dev/api/leaderboard/`;
@@ -24,6 +27,12 @@ function Leaderboard() {
         console.log('Leaderboard - Processed data:', leaderboardData);
         const sortedData = sortLeaderboard(Array.isArray(leaderboardData) ? leaderboardData : [], 'total_calories', 'desc');
         setLeaderboard(sortedData);
+        setFilteredLeaderboard(sortedData);
+        
+        // Extract unique teams
+        const teams = [...new Set(sortedData.map(l => l.team).filter(Boolean))];
+        setAvailableTeams(teams);
+        
         setLoading(false);
       })
       .catch(error => {
@@ -54,7 +63,23 @@ function Leaderboard() {
   const handleSort = (key) => {
     const newOrder = sortConfig.key === key && sortConfig.order === 'desc' ? 'asc' : 'desc';
     setSortConfig({ key, order: newOrder });
-    setLeaderboard(sortLeaderboard(leaderboard, key, newOrder));
+    const sorted = sortLeaderboard(leaderboard, key, newOrder);
+    setLeaderboard(sorted);
+    applyFilter(sorted, teamFilter);
+  };
+
+  const applyFilter = (data, team) => {
+    if (team === 'all') {
+      setFilteredLeaderboard(data);
+    } else {
+      setFilteredLeaderboard(data.filter(entry => entry.team === team));
+    }
+  };
+
+  const handleTeamFilter = (e) => {
+    const team = e.target.value;
+    setTeamFilter(team);
+    applyFilter(leaderboard, team);
   };
 
   const getSortIcon = (columnKey) => {
@@ -70,6 +95,18 @@ function Leaderboard() {
   return (
     <div className="container mt-4">
       <h2>Leaderboard</h2>
+      
+      {/* Filter Section */}
+      <div className="mb-3">
+        <label className="form-label fw-bold">Filter by Team:</label>
+        <select className="form-select" value={teamFilter} onChange={handleTeamFilter} style={{ maxWidth: '300px' }}>
+          <option value="all">All Teams</option>
+          {availableTeams.map(team => (
+            <option key={team} value={team}>{team}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="table-responsive">
         <table className="table table-striped">
           <thead>
@@ -106,8 +143,8 @@ function Leaderboard() {
             </tr>
           </thead>
           <tbody>
-            {leaderboard.length > 0 ? (
-              leaderboard.map((entry, index) => (
+            {filteredLeaderboard.length > 0 ? (
+              filteredLeaderboard.map((entry, index) => (
                 <tr key={entry.id || entry._id || index}>
                   <td>{entry.rank || index + 1}</td>
                   <td>{entry.user_name || entry.user || 'N/A'}</td>

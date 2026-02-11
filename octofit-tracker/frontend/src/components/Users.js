@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 
 function Users() {
   const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', team: '' });
   const [saveMessage, setSaveMessage] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'name', order: 'asc' });
+  const [teamFilter, setTeamFilter] = useState('all');
+  const [availableTeams, setAvailableTeams] = useState([]);
 
   useEffect(() => {
     fetchUsers();
@@ -46,6 +49,12 @@ function Users() {
         console.log('Users - Processed data:', usersData);
         const sortedData = sortUsers(Array.isArray(usersData) ? usersData : [], 'name', 'asc');
         setUsers(sortedData);
+        setFilteredUsers(sortedData);
+        
+        // Extract unique teams
+        const teams = [...new Set(sortedData.map(u => u.team).filter(Boolean))];
+        setAvailableTeams(teams);
+        
         setLoading(false);
       })
       .catch(error => {
@@ -81,7 +90,23 @@ function Users() {
   const handleSort = (key) => {
     const newOrder = sortConfig.key === key && sortConfig.order === 'asc' ? 'desc' : 'asc';
     setSortConfig({ key, order: newOrder });
-    setUsers(sortUsers(users, key, newOrder));
+    const sorted = sortUsers(users, key, newOrder);
+    setUsers(sorted);
+    applyFilter(sorted, teamFilter);
+  };
+
+  const applyFilter = (data, team) => {
+    if (team === 'all') {
+      setFilteredUsers(data);
+    } else {
+      setFilteredUsers(data.filter(user => user.team === team));
+    }
+  };
+
+  const handleTeamFilter = (e) => {
+    const team = e.target.value;
+    setTeamFilter(team);
+    applyFilter(users, team);
   };
 
   const getSortIcon = (columnKey) => {
@@ -143,6 +168,17 @@ function Users() {
         </div>
       )}
 
+      {/* Filter Section */}
+      <div className="mb-3">
+        <label className="form-label fw-bold">Filter by Team:</label>
+        <select className="form-select" value={teamFilter} onChange={handleTeamFilter} style={{ maxWidth: '300px' }}>
+          <option value="all">All Teams</option>
+          {availableTeams.map(team => (
+            <option key={team} value={team}>{team}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="table-responsive">
         <table className="table table-striped">
           <thead>
@@ -173,8 +209,8 @@ function Users() {
             </tr>
           </thead>
           <tbody>
-            {users.length > 0 ? (
-              users.map(user => (
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map(user => (
                 <tr key={user.id || user._id}>
                   <td>{user.id || user._id || 'N/A'}</td>
                   <td>{user.name || 'N/A'}</td>

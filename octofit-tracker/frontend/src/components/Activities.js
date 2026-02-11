@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 
 function Activities() {
   const [activities, setActivities] = useState([]);
+  const [filteredActivities, setFilteredActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortOrder, setSortOrder] = useState('desc'); // 'desc' or 'asc'
+  const [activityTypeFilter, setActivityTypeFilter] = useState('all');
+  const [availableActivityTypes, setAvailableActivityTypes] = useState([]);
 
   useEffect(() => {
     const apiUrl = `https://${process.env.REACT_APP_CODESPACE_NAME}-8000.app.github.dev/api/activities/`;
@@ -24,6 +27,12 @@ function Activities() {
         console.log('Activities - Processed data:', activitiesData);
         const sortedData = sortActivitiesByDate(Array.isArray(activitiesData) ? activitiesData : [], 'desc');
         setActivities(sortedData);
+        setFilteredActivities(sortedData);
+        
+        // Extract unique activity types
+        const types = [...new Set(sortedData.map(a => a.activity_type).filter(Boolean))];
+        setAvailableActivityTypes(types);
+        
         setLoading(false);
       })
       .catch(error => {
@@ -44,7 +53,23 @@ function Activities() {
   const handleSortByDate = () => {
     const newOrder = sortOrder === 'desc' ? 'asc' : 'desc';
     setSortOrder(newOrder);
-    setActivities(sortActivitiesByDate(activities, newOrder));
+    const sorted = sortActivitiesByDate(activities, newOrder);
+    setActivities(sorted);
+    applyFilter(sorted, activityTypeFilter);
+  };
+
+  const applyFilter = (data, type) => {
+    if (type === 'all') {
+      setFilteredActivities(data);
+    } else {
+      setFilteredActivities(data.filter(activity => activity.activity_type === type));
+    }
+  };
+
+  const handleActivityTypeFilter = (e) => {
+    const type = e.target.value;
+    setActivityTypeFilter(type);
+    applyFilter(activities, type);
   };
 
   if (loading) return <div className="container mt-4"><p>Loading activities...</p></div>;
@@ -53,6 +78,18 @@ function Activities() {
   return (
     <div className="container mt-4">
       <h2>Activities</h2>
+      
+      {/* Filter Section */}
+      <div className="mb-3">
+        <label className="form-label fw-bold">Filter by Activity Type:</label>
+        <select className="form-select" value={activityTypeFilter} onChange={handleActivityTypeFilter} style={{ maxWidth: '300px' }}>
+          <option value="all">All Activity Types</option>
+          {availableActivityTypes.map(type => (
+            <option key={type} value={type}>{type}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="table-responsive">
         <table className="table table-striped">
           <thead>
@@ -72,8 +109,8 @@ function Activities() {
             </tr>
           </thead>
           <tbody>
-            {activities.length > 0 ? (
-              activities.map(activity => (
+            {filteredActivities.length > 0 ? (
+              filteredActivities.map(activity => (
                 <tr key={activity.id || activity._id}>
                   <td>{activity.id || activity._id || 'N/A'}</td>
                   <td>{activity.user_name || activity.user || 'N/A'}</td>
