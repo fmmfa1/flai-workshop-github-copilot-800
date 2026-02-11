@@ -4,6 +4,7 @@ function Activities() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' or 'asc'
 
   useEffect(() => {
     const apiUrl = `https://${process.env.REACT_APP_CODESPACE_NAME}-8000.app.github.dev/api/activities/`;
@@ -21,7 +22,8 @@ function Activities() {
         // Handle both paginated (.results) and plain array responses
         const activitiesData = data.results || data;
         console.log('Activities - Processed data:', activitiesData);
-        setActivities(Array.isArray(activitiesData) ? activitiesData : []);
+        const sortedData = sortActivitiesByDate(Array.isArray(activitiesData) ? activitiesData : [], 'desc');
+        setActivities(sortedData);
         setLoading(false);
       })
       .catch(error => {
@@ -30,6 +32,20 @@ function Activities() {
         setLoading(false);
       });
   }, []);
+
+  const sortActivitiesByDate = (data, order) => {
+    return [...data].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return order === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+  };
+
+  const handleSortByDate = () => {
+    const newOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+    setSortOrder(newOrder);
+    setActivities(sortActivitiesByDate(activities, newOrder));
+  };
 
   if (loading) return <div className="container mt-4"><p>Loading activities...</p></div>;
   if (error) return <div className="container mt-4"><p className="text-danger">Error: {error}</p></div>;
@@ -46,7 +62,13 @@ function Activities() {
               <th>Activity Type</th>
               <th>Duration (min)</th>
               <th>Calories</th>
-              <th>Date</th>
+              <th 
+                onClick={handleSortByDate} 
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                Date {sortOrder === 'desc' ? '▼' : '▲'}
+              </th>
             </tr>
           </thead>
           <tbody>

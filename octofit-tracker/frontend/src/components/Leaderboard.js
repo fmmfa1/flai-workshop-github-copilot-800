@@ -4,6 +4,7 @@ function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: 'total_calories', order: 'desc' });
 
   useEffect(() => {
     const apiUrl = `https://${process.env.REACT_APP_CODESPACE_NAME}-8000.app.github.dev/api/leaderboard/`;
@@ -21,7 +22,8 @@ function Leaderboard() {
         // Handle both paginated (.results) and plain array responses
         const leaderboardData = data.results || data;
         console.log('Leaderboard - Processed data:', leaderboardData);
-        setLeaderboard(Array.isArray(leaderboardData) ? leaderboardData : []);
+        const sortedData = sortLeaderboard(Array.isArray(leaderboardData) ? leaderboardData : [], 'total_calories', 'desc');
+        setLeaderboard(sortedData);
         setLoading(false);
       })
       .catch(error => {
@@ -30,6 +32,37 @@ function Leaderboard() {
         setLoading(false);
       });
   }, []);
+
+  const sortLeaderboard = (data, key, order) => {
+    return [...data].sort((a, b) => {
+      let aVal = a[key] || a.total_points || 0;
+      let bVal = b[key] || b.total_points || 0;
+      
+      if (key === 'rank') {
+        aVal = a.rank || 0;
+        bVal = b.rank || 0;
+      } else if (key === 'user_name') {
+        aVal = (a.user_name || a.user || '').toLowerCase();
+        bVal = (b.user_name || b.user || '').toLowerCase();
+        return order === 'desc' ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+      }
+      
+      return order === 'desc' ? bVal - aVal : aVal - bVal;
+    });
+  };
+
+  const handleSort = (key) => {
+    const newOrder = sortConfig.key === key && sortConfig.order === 'desc' ? 'asc' : 'desc';
+    setSortConfig({ key, order: newOrder });
+    setLeaderboard(sortLeaderboard(leaderboard, key, newOrder));
+  };
+
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key === columnKey) {
+      return sortConfig.order === 'desc' ? ' ▼' : ' ▲';
+    }
+    return '';
+  };
 
   if (loading) return <div className="container mt-4"><p>Loading leaderboard...</p></div>;
   if (error) return <div className="container mt-4"><p className="text-danger">Error: {error}</p></div>;
@@ -41,11 +74,35 @@ function Leaderboard() {
         <table className="table table-striped">
           <thead>
             <tr>
-              <th>Rank</th>
-              <th>User</th>
+              <th 
+                onClick={() => handleSort('rank')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                Rank{getSortIcon('rank')}
+              </th>
+              <th 
+                onClick={() => handleSort('user_name')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                User{getSortIcon('user_name')}
+              </th>
               <th>Team</th>
-              <th>Total Calories</th>
-              <th>Total Activities</th>
+              <th 
+                onClick={() => handleSort('total_calories')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                Total Calories{getSortIcon('total_calories')}
+              </th>
+              <th 
+                onClick={() => handleSort('total_activities')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                Total Activities{getSortIcon('total_activities')}
+              </th>
             </tr>
           </thead>
           <tbody>
