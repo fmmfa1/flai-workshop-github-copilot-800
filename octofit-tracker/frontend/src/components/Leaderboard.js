@@ -97,9 +97,9 @@ function Leaderboard() {
       <h2>Leaderboard</h2>
       
       {/* Filter Section */}
-      <div className="mb-3">
-        <label className="form-label fw-bold">Filter by Team:</label>
-        <select className="form-select" value={teamFilter} onChange={handleTeamFilter} style={{ maxWidth: '300px' }}>
+      <div className="filter-section">
+        <label className="form-label">Filter by Team</label>
+        <select className="form-select" value={teamFilter} onChange={handleTeamFilter}>
           <option value="all">All Teams</option>
           {availableTeams.map(team => (
             <option key={team} value={team}>{team}</option>

@@ -80,9 +80,9 @@ function Activities() {
       <h2>Activities</h2>
       
       {/* Filter Section */}
-      <div className="mb-3">
-        <label className="form-label fw-bold">Filter by Activity Type:</label>
-        <select className="form-select" value={activityTypeFilter} onChange={handleActivityTypeFilter} style={{ maxWidth: '300px' }}>
+      <div className="filter-section">
+        <label className="form-label">Filter by Activity Type</label>
+        <select className="form-select" value={activityTypeFilter} onChange={handleActivityTypeFilter}>
           <option value="all">All Activity Types</option>
           {availableActivityTypes.map(type => (
             <option key={type} value={type}>{type}</option>
