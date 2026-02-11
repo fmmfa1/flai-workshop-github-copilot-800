@@ -12,11 +12,21 @@ Class-based views
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+
+REST API endpoint format for GitHub Codespaces:
+    https://$CODESPACE_NAME-8000.app.github.dev/api/[component]/
+    Example: https://$CODESPACE_NAME-8000.app.github.dev/api/activities/
+
+The API automatically detects and returns the correct URL based on the request context.
 """
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from octofit_tracker import views
+import os
+
+# GitHub Codespaces configuration
+CODESPACE_NAME = os.getenv('CODESPACE_NAME')
 
 # Create a router and register our viewsets with it
 router = DefaultRouter()
