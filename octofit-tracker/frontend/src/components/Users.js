@@ -4,8 +4,15 @@ function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [formData, setFormData] = useState({ name: '', email: '', team: '' });
+  const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = () => {
     const apiUrl = `https://${process.env.REACT_APP_CODESPACE_NAME}-8000.app.github.dev/api/users/`;
     console.log('Users API Endpoint:', apiUrl);
 
@@ -29,7 +36,69 @@ function Users() {
         setError(error.message);
         setLoading(false);
       });
-  }, []);
+  };
+
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      team: user.team || ''
+    });
+    setSaveMessage('');
+  };
+
+  const handleCancel = () => {
+    setEditingUser(null);
+    setFormData({ name: '', email: '', team: '' });
+    setSaveMessage('');
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSave = async () => {
+    const userId = editingUser.id || editingUser._id;
+    const apiUrl = `https://${process.env.REACT_APP_CODESPACE_NAME}-8000.app.github.dev/api/users/${userId}/`;
+    
+    console.log('Updating user:', userId, formData);
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user');
+      }
+
+      const updatedUser = await response.json();
+      console.log('User updated successfully:', updatedUser);
+
+      // Update the users list with the new data
+      setUsers(users.map(user => 
+        (user.id || user._id) === userId ? { ...user, ...formData } : user
+      ));
+
+      setSaveMessage('User updated successfully!');
+      setTimeout(() => {
+        setEditingUser(null);
+        setSaveMessage('');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error updating user:', error);
+      setSaveMessage('Error updating user. Please try again.');
+    }
+  };
 
   if (loading) return <div className="container mt-4"><p>Loading users...</p></div>;
   if (error) return <div className="container mt-4"><p className="text-danger">Error: {error}</p></div>;
@@ -37,26 +106,40 @@ function Users() {
   return (
     <div className="container mt-4">
       <h2>Users</h2>
+      
+      {saveMessage && (
+        <div className={`alert ${saveMessage.includes('Error') ? 'alert-danger' : 'alert-success'} mt-3`}>
+          {saveMessage}
+        </div>
+      )}
+
       <div className="table-responsive">
         <table className="table table-striped">
           <thead>
             <tr>
               <th>ID</th>
-              <th>Username</th>
+              <th>Name</th>
               <th>Email</th>
               <th>Team</th>
-              <th>Date Joined</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.length > 0 ? (
               users.map(user => (
-                <tr key={user.id}>
-                  <td>{user.id}</td>
-                  <td>{user.username}</td>
-                  <td>{user.email}</td>
+                <tr key={user.id || user._id}>
+                  <td>{user.id || user._id || 'N/A'}</td>
+                  <td>{user.name || 'N/A'}</td>
+                  <td>{user.email || 'N/A'}</td>
                   <td>{user.team || 'N/A'}</td>
-                  <td>{new Date(user.date_joined).toLocaleDateString()}</td>
+                  <td>
+                    <button 
+                      className="btn btn-sm btn-primary"
+                      onClick={() => handleEdit(user)}
+                    >
+                      ✏️ Edit
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
@@ -67,6 +150,61 @@ function Users() {
           </tbody>
         </table>
       </div>
+
+      {/* Edit Modal */}
+      {editingUser && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Edit User</h5>
+                <button type="button" className="btn-close" onClick={handleCancel}></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label">Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Email</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Team</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="team"
+                    value={formData.team}
+                    onChange={handleChange}
+                    placeholder="Enter team name"
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-primary" onClick={handleSave}>
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

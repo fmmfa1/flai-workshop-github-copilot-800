@@ -40,23 +40,23 @@ function Workouts() {
       <div className="row">
         {workouts.length > 0 ? (
           workouts.map(workout => (
-            <div key={workout.id} className="col-md-6 col-lg-4 mb-4">
+            <div key={workout.id || workout._id} className="col-md-6 col-lg-4 mb-4">
               <div className="card">
                 <div className="card-body">
-                  <h5 className="card-title">{workout.name}</h5>
-                  <p className="card-text">{workout.description}</p>
+                  <h5 className="card-title">{workout.name || 'Unnamed Workout'}</h5>
+                  <p className="card-text">{workout.description || 'No description available'}</p>
                   <ul className="list-group list-group-flush">
                     <li className="list-group-item">
-                      <strong>Type:</strong> {workout.workout_type}
+                      <strong>Duration:</strong> {workout.duration || 0} minutes
                     </li>
                     <li className="list-group-item">
-                      <strong>Duration:</strong> {workout.duration} minutes
+                      <strong>Difficulty:</strong> {workout.difficulty || 'N/A'}
                     </li>
                     <li className="list-group-item">
-                      <strong>Difficulty:</strong> {workout.difficulty_level}
+                      <strong>Calories:</strong> {workout.calories_estimate || 0}
                     </li>
                     <li className="list-group-item">
-                      <strong>Calories:</strong> {workout.calories_estimate}
+                      <strong>Exercises:</strong> {workout.exercises ? (Array.isArray(workout.exercises) ? workout.exercises.length : 0) : 0}
                     </li>
                   </ul>
                 </div>

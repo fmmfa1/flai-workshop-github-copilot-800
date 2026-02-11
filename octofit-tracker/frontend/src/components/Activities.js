@@ -45,7 +45,6 @@ function Activities() {
               <th>User</th>
               <th>Activity Type</th>
               <th>Duration (min)</th>
-              <th>Distance (km)</th>
               <th>Calories</th>
               <th>Date</th>
             </tr>
@@ -53,19 +52,18 @@ function Activities() {
           <tbody>
             {activities.length > 0 ? (
               activities.map(activity => (
-                <tr key={activity.id}>
-                  <td>{activity.id}</td>
-                  <td>{activity.user}</td>
-                  <td>{activity.activity_type}</td>
-                  <td>{activity.duration}</td>
-                  <td>{activity.distance}</td>
-                  <td>{activity.calories_burned}</td>
-                  <td>{new Date(activity.date).toLocaleDateString()}</td>
+                <tr key={activity.id || activity._id}>
+                  <td>{activity.id || activity._id || 'N/A'}</td>
+                  <td>{activity.user_name || activity.user || 'N/A'}</td>
+                  <td>{activity.activity_type || 'N/A'}</td>
+                  <td>{activity.duration || 'N/A'}</td>
+                  <td>{activity.calories || activity.calories_burned || 'N/A'}</td>
+                  <td>{activity.date ? new Date(activity.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="text-center">No activities found</td>
+                <td colSpan="6" className="text-center">No activities found</td>
               </tr>
             )}
           </tbody>

@@ -44,19 +44,19 @@ function Leaderboard() {
               <th>Rank</th>
               <th>User</th>
               <th>Team</th>
-              <th>Total Points</th>
+              <th>Total Calories</th>
               <th>Total Activities</th>
             </tr>
           </thead>
           <tbody>
             {leaderboard.length > 0 ? (
               leaderboard.map((entry, index) => (
-                <tr key={entry.id || index}>
-                  <td>{index + 1}</td>
-                  <td>{entry.user}</td>
+                <tr key={entry.id || entry._id || index}>
+                  <td>{entry.rank || index + 1}</td>
+                  <td>{entry.user_name || entry.user || 'N/A'}</td>
                   <td>{entry.team || 'N/A'}</td>
-                  <td>{entry.total_points}</td>
-                  <td>{entry.total_activities}</td>
+                  <td>{entry.total_calories || entry.total_points || 0}</td>
+                  <td>{entry.total_activities || 0}</td>
                 </tr>
               ))
             ) : (

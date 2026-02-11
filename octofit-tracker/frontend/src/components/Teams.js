@@ -40,14 +40,14 @@ function Teams() {
       <div className="row">
         {teams.length > 0 ? (
           teams.map(team => (
-            <div key={team.id} className="col-md-6 col-lg-4 mb-4">
+            <div key={team.id || team._id} className="col-md-6 col-lg-4 mb-4">
               <div className="card">
                 <div className="card-body">
                   <h5 className="card-title">{team.name}</h5>
                   <p className="card-text">{team.description}</p>
                   <ul className="list-group list-group-flush">
                     <li className="list-group-item">
-                      <strong>Created:</strong> {new Date(team.created_at).toLocaleDateString()}
+                      <strong>Members:</strong> {team.members ? (Array.isArray(team.members) ? team.members.length : 0) : 0}
                     </li>
                   </ul>
                 </div>
