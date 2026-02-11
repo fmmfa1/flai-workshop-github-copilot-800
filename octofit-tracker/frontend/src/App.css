@@ -121,6 +121,19 @@ p {
   padding: 15px;
 }
 
+.table thead th[style*="cursor: pointer"] {
+  color: var(--text-light) !important;
+  transition: background-color 0.2s ease;
+}
+
+.table thead th[style*="cursor: pointer"]:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.table thead th[style*="cursor: pointer"]:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
 .table-striped tbody tr:nth-of-type(odd) {
   background-color: rgba(102, 126, 234, 0.05);
 }

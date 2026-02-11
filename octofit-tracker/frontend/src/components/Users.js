@@ -7,10 +7,26 @@ function Users() {
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', team: '' });
   const [saveMessage, setSaveMessage] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'name', order: 'asc' });
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const sortUsers = (data, key, order) => {
+    return [...data].sort((a, b) => {
+      let aVal = a[key] || '';
+      let bVal = b[key] || '';
+      
+      if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+        return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      
+      return order === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+  };
 
   const fetchUsers = () => {
     const apiUrl = `https://${process.env.REACT_APP_CODESPACE_NAME}-8000.app.github.dev/api/users/`;
@@ -28,7 +44,8 @@ function Users() {
         // Handle both paginated (.results) and plain array responses
         const usersData = data.results || data;
         console.log('Users - Processed data:', usersData);
-        setUsers(Array.isArray(usersData) ? usersData : []);
+        const sortedData = sortUsers(Array.isArray(usersData) ? usersData : [], 'name', 'asc');
+        setUsers(sortedData);
         setLoading(false);
       })
       .catch(error => {
@@ -59,6 +76,19 @@ function Users() {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleSort = (key) => {
+    const newOrder = sortConfig.key === key && sortConfig.order === 'asc' ? 'desc' : 'asc';
+    setSortConfig({ key, order: newOrder });
+    setUsers(sortUsers(users, key, newOrder));
+  };
+
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key === columnKey) {
+      return sortConfig.order === 'asc' ? ' ▲' : ' ▼';
+    }
+    return '';
   };
 
   const handleSave = async () => {
@@ -118,9 +148,27 @@ function Users() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Team</th>
+              <th 
+                onClick={() => handleSort('name')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                Name{getSortIcon('name')}
+              </th>
+              <th 
+                onClick={() => handleSort('email')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                Email{getSortIcon('email')}
+              </th>
+              <th 
+                onClick={() => handleSort('team')}
+                style={{ cursor: 'pointer', userSelect: 'none' }}
+                title="Click to sort"
+              >
+                Team{getSortIcon('team')}
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
