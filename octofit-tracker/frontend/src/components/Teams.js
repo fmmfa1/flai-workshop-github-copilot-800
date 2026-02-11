@@ -5,6 +5,9 @@ function Teams() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'name', order: 'asc' });
+  const [showModal, setShowModal] = useState(false);
+  const [newTeam, setNewTeam] = useState({ name: '', description: '' });
+  const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
     fetchTeams();
@@ -71,12 +74,76 @@ function Teams() {
     return '';
   };
 
+  const handleOpenModal = () => {
+    setNewTeam({ name: '', description: '' });
+    setSaveMessage('');
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setNewTeam({ name: '', description: '' });
+    setSaveMessage('');
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewTeam(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateTeam = () => {
+    if (!newTeam.name.trim()) {
+      setSaveMessage('Error: Team name is required');
+      return;
+    }
+
+    const apiUrl = `https://${process.env.REACT_APP_CODESPACE_NAME}-8000.app.github.dev/api/teams/`;
+
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: newTeam.name,
+        description: newTeam.description,
+        members: []
+      })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to create team');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setSaveMessage('Team created successfully!');
+        setTimeout(() => {
+          handleCloseModal();
+          fetchTeams(); // Refresh the teams list
+        }, 1500);
+      })
+      .catch(error => {
+        console.error('Error creating team:', error);
+        setSaveMessage('Error: Failed to create team');
+      });
+  };
+
   if (loading) return <div className="container mt-4"><p>Loading teams...</p></div>;
   if (error) return <div className="container mt-4"><p className="text-danger">Error: {error}</p></div>;
 
   return (
     <div className="container mt-4">
-      <h2>Teams</h2>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2>Teams</h2>
+        <button 
+          className="btn btn-success"
+          onClick={handleOpenModal}
+        >
+          ➕ Add New Team
+        </button>
+      </div>
+      
       <div className="mb-3">
         <button 
           className="btn btn-sm btn-outline-primary me-2"
@@ -114,6 +181,58 @@ function Teams() {
           </div>
         )}
       </div>
+
+      {/* Add New Team Modal */}
+      {showModal && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Add New Team</h5>
+                <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+              </div>
+              <div className="modal-body">
+                {saveMessage && (
+                  <div className={`alert ${saveMessage.includes('Error') ? 'alert-danger' : 'alert-success'}`}>
+                    {saveMessage}
+                  </div>
+                )}
+                <div className="mb-3">
+                  <label className="form-label">Team Name *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="name"
+                    value={newTeam.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter team name"
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    name="description"
+                    value={newTeam.description}
+                    onChange={handleInputChange}
+                    placeholder="Enter team description"
+                    rows="3"
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-success" onClick={handleCreateTeam}>
+                  Create Team
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
